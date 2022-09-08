@@ -1,25 +1,15 @@
 # Multi-Document Scientific Summarization from a Knowledge Graph-Centric View
-This is the Pytorch implementation for [Multi-Document Scientific Summarization from a Knowledge Graph-Centric View](http://arxiv.org/abs/1909.02480), accepted by COLING 2022.
+This is the Pytorch implementation for [Multi-Document Scientific Summarization from a Knowledge Graph-Centric View], accepted by COLING 2022.
 
 <p align="center">
  <img src="images/model_arc.png" width="700"/>
 </p>
 
-We propose an efficient and effective model for non-autoregressive sequence generation using latent variable models.
-We model the complex distributions with generative flows, and design 
-several layers of flow tailored for modeling the conditional density of sequential latent variables.
-On several machine translation benchmark datasets (wmt14-ende, wmt16-enro), we achieved comparable performance 
-with state-of-the-art non-autoregressive NMT models and almost constant-decoding time w.r.t the sequence length.
-
 ## Requirements
-* Python version >= 3.6
-* Pytorch version >= 1.1
-* apex
-* Perl 
-
-## Installation
-1. Install [NVIDIA-apex](https://github.com/NVIDIA/apex).
-2. Install [Pytorch and torchvision](https://pytorch.org/get-started/locally/?source=Google&medium=PaidSearch&utm_campaign=1712416206&utm_adgroup=67591282235&utm_keyword=pytorch%20installation&utm_offering=AI&utm_Product=PYTorch&gclid=CjwKCAjw-7LrBRB6EiwAhh1yX0hnpuTNccHYdOCd3WeW1plR0GhjSkzqLuAL5eRNcobASoxbsOwX4RoCQKkQAvD_BwE).
+* Python version = 3.6.3
+* Pytorch version = 1.5.0
+* transformers = 4.10.3
+* dgl-cu101 = 0.6.1
 
 ## Data
 1. WMT'14 English to German (EN-DE) can be obtained with scripts provided in [fairseq](https://github.com/pytorch/fairseq/blob/master/examples/translation/README.md#wmt14-english-to-german-convolutional).
