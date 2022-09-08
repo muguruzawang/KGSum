@@ -2,7 +2,7 @@
 This is the Pytorch implementation for [Multi-Document Scientific Summarization from a Knowledge Graph-Centric View](http://arxiv.org/abs/1909.02480), accepted by COLING 2022.
 
 <p align="center">
- <img src="images/model_arc.pdf" width="700"/>
+ <img src="images/model_arc.png" width="700"/>
 </p>
 
 We propose an efficient and effective model for non-autoregressive sequence generation using latent variable models.
