@@ -10,6 +10,7 @@ This is the Pytorch implementation for [Multi-Document Scientific Summarization 
 * Pytorch == 1.5.0
 * transformers == 4.10.3
 * dgl-cu101 == 0.6.1
+* pyrouge == 0.1.3
 
 ## Usage
 1. Create folder `datasets`, `cache`, `trained_model`, `result` under the root directory.
@@ -17,6 +18,12 @@ This is the Pytorch implementation for [Multi-Document Scientific Summarization 
 2. Download Multi-Xscience Dataset from [here](https://github.com/yaolu/Multi-XScience). Put Multi-Xscience under `datasets`.
 
 3. Dataset Preprocessing:
+
+    ```
+    3.1 Create vocab
+    PYTHONPATH=. python ./script/createVoc.py --data_path `your_data_path` --dataset Multi-Xscience
+    ```
+
 
 
 ## Training a new model
