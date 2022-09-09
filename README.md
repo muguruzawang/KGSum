@@ -6,14 +6,18 @@ This is the Pytorch implementation for [Multi-Document Scientific Summarization 
 </p>
 
 ## Requirements
-* Python version = 3.6.3
-* Pytorch version = 1.5.0
-* transformers = 4.10.3
-* dgl-cu101 = 0.6.1
+* Python == 3.6.3
+* Pytorch == 1.5.0
+* transformers == 4.10.3
+* dgl-cu101 == 0.6.1
 
-## Data
-1. WMT'14 English to German (EN-DE) can be obtained with scripts provided in [fairseq](https://github.com/pytorch/fairseq/blob/master/examples/translation/README.md#wmt14-english-to-german-convolutional).
-2. WMT'16 English to Romania (EN-RO) can be obtained from [here](https://github.com/nyu-dl/dl4mt-nonauto#downloading-datasets--pre-trained-models).
+## Usage
+1. Create folder `datasets`, `cache`, `trained_model`, `result` under the root directory.
+
+2. Download Multi-Xscience Dataset from [here](https://github.com/yaolu/Multi-XScience). Put Multi-Xscience under `datasets`.
+
+3. Dataset Preprocessing:
+
 
 ## Training a new model
 The MT datasets should be named in the format of ``train.{language code}, dev.{language code}, test.{language code}``, e.g "train.de".
