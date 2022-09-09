@@ -22,19 +22,22 @@ This is the Pytorch implementation for [Multi-Document Scientific Summarization 
 
 4. Dataset Preprocessing:
 
+    
+    * 4.1 Create vocab
     ```
-    4.1 Create vocab
     PYTHONPATH=. python script/createVoc.py --data_path <your_data_path> --dataset Multi-Xscience
     ```
+    
+    * 4.2 Extract entities and relations for Multi-Xscience using Dygie++.
+    
+    
+    * 4.3 Using RAKE algorithm to calculate RAKE score for each entity candidate. 
     ```
-    4.2 Extract entities and relations for Multi-Xscience using Dygie++.
-    ```
-    ```
-    4.3 Using RAKE algorithm to calculate RAKE score for each entity candidate. 
     python script/keyphrase_extract.py
     ```
+    
+    * 4.4 Create KGText samples using the raw dataset and entities and relations.
     ```
-    4.4 Create KGText samples using the raw dataset and entities and relations.
     python script/add_prompt_info.py
     ```
 
