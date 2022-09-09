@@ -14,7 +14,7 @@ This is the Pytorch implementation for [Multi-Document Scientific Summarization 
 * rake-nltk
 
 ## Usage
-1. Create folder `datasets`, `cache`, `trained_model`, `result` under the root directory.
+1. Create folder `datasets`, `cache`, `trained_model`, `result` , `log` under the root directory.
 
 2. Download Multi-Xscience Dataset from [here](https://github.com/yaolu/Multi-XScience). Put Multi-Xscience under `datasets`.
 
@@ -33,60 +33,26 @@ This is the Pytorch implementation for [Multi-Document Scientific Summarization 
     4.3 Using RAKE algorithm to calculate RAKE score for each entity candidate. 
     python script/keyphrase_extract.py
     ```
-
+    ```
+    4.4 Create KGText samples using the raw dataset and entities and relations.
+    python script/add_prompt_info.py
+    ```
 
 ## Training a new model
-The MT datasets should be named in the format of ``train.{language code}, dev.{language code}, test.{language code}``, e.g "train.de".
-Suppose we put the WMT14-ENDE data sets under ``data/wmt14-ende/real-bpe/``, we can train FlowSeq over this data on one node with the
-following script:
 ```bash
-cd experiments
+export PYTHONPATH=.
 
-python -u distributed.py  \
-    --nnodes 1 --node_rank 0 --nproc_per_node <num of gpus per node> --master_addr <address of master node> \
-    --master_port <port ID> \
-    --config configs/wmt14/config-transformer-base.json --model_path <path to the saved model> \
-    --data_path data/wmt14-ende/real-bpe/ \
-    --batch_size 2048 --batch_steps 1 --init_batch_size 512 --eval_batch_size 32 \
-    --src en --tgt de \
-    --lr 0.0005 --beta1 0.9 --beta2 0.999 --eps 1e-8 --grad_clip 1.0 --amsgrad \
-    --lr_decay 'expo' --weight_decay 0.001 \
-    --init_steps 30000 --kl_warmup_steps 10000 \
-    --subword 'joint-bpe' --bucket_batch 1 --create_vocab 
+CUDA_LAUNCH_BLOCKING=1 python train.py  --mode train --cuda  --data_dir <path-to-datasets-folder> --cache_dir <path-to-cache-folder> --batch_size 4 --seed 666 --train_steps 100000 --save_checkpoint_steps 4000  --report_every 1  --visible_gpus 0 --gpu_ranks 0  --world_size 1 --accum_count 2 --dec_dropout 0.1 --enc_dropout 0.1  --model_path  <path-to-trained-model-folder>  --log_file <path-to-log-file>  --inter_layers 6,7 --inter_heads 8 --hier --doc_max_timesteps 50 --prop 3 --min_length1 100 --no_repeat_ngram_size1 3 --sep_optim false --num_workers 5 --lr_dec 0.05 --warmup_steps 8000 --lr 0.005 --enc_layers 6  --dec_layers 6 --use_nucleus_sampling false --label_smoothing 0.1 --entloss_weight 1 
 ```
-After training, under the <path to the saved model>, there will be saved checkpoints, `model.pt`, `config.json`, `log.txt`, 
-`vocab` directory and intermediate translation results under the `translations` directory.
 
-#### Note:  
- - The argument --batch_steps is used for accumulated gradients to trade speed for memory. The size of each segment of data batch is batch-size / (num_gpus * batch_steps).
- - To train FlowSeq on multiple nodes, we provide a script for the slurm cluster environment `/experiments/slurm.py` or please
-refer to the pytorch distributed parallel training [tutorial](https://pytorch.org/tutorials/intermediate/dist_tuto.html).
- - To create distillation dataset, please use [fairseq](https://github.com/pytorch/fairseq/blob/master/examples/translation/README.md#neural-machine-translation) to train a Transformer model
-and translate the source data set.
-
-## Translation and evalutaion
+## Test
 ```bash
-cd experiments
+export PYTHONPATH=.
 
-python -u translate.py \
-    --model_path <path to the saved model> \
-    --data_path data/wmt14-ende/real-bpe/ \
-    --batch_size 32 --bucket_batch 1 \
-    --decode {'argmax', 'iw', 'sample'} \
-    --tau 0.0 --nlen 3 --ntr 1
+python train.py  --mode test --cuda  --data_dir <path-to-datasets-folder> --cache_dir  <path-to-cache-folder> --batch_size 8 --valid_batch_size 8 --seed 666   --visible_gpus 0 --gpu_ranks 0 --dec_dropout 0.1 --enc_dropout 0.1  --lr 0.2 --label_smoothing 0.0  --log_file <path-to-log-file>  --inter_layers 6,7 --inter_heads 8 --doc_max_timesteps 50 --use_bert false --report_rouge --alpha 0.4 --max_length 400 --result_path <path-to-result-folder> --prop 3 --test_all false --sep_optim false   --use_bert false  --use_nucleus_sampling false --min_length1 100 --min_length2 110 --no_repeat_ngram_size1 3 --no_repeat_ngram_size2 3 --test_from <path-to-saved-model-checkpoint>
 ```
-Please check details of arguments [here](https://github.com/XuezheMax/flowseq/blob/master/experiments/options.py#L48).
-
-To keep the output translations original order of the input test data, use `--bucket_batch 0`.
 
 ## References
 ```
-@inproceedings{flowseq2019,
-    title = {FlowSeq: Non-Autoregressive Conditional Sequence Generation with Generative Flow},
-    author = {Ma, Xuezhe and Zhou, Chunting and Li, Xian and Neubig, Graham and Hovy, Eduard},
-    booktitle = {Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing},
-    address = {Hong Kong},
-    month = {November},
-    year = {2019}
-}
+
 ```
