@@ -11,19 +11,28 @@ This is the Pytorch implementation for [Multi-Document Scientific Summarization 
 * transformers == 4.10.3
 * dgl-cu101 == 0.6.1
 * pyrouge == 0.1.3
+* rake-nltk
 
 ## Usage
 1. Create folder `datasets`, `cache`, `trained_model`, `result` under the root directory.
 
 2. Download Multi-Xscience Dataset from [here](https://github.com/yaolu/Multi-XScience). Put Multi-Xscience under `datasets`.
 
-3. Dataset Preprocessing:
+3. Train a Dygie++ model for extracting entitie and relations from [here](https://github.com/dwadden/dygiepp).
+
+4. Dataset Preprocessing:
 
     ```
-    3.1 Create vocab
-    PYTHONPATH=. python ./script/createVoc.py --data_path `your_data_path` --dataset Multi-Xscience
+    4.1 Create vocab
+    PYTHONPATH=. python script/createVoc.py --data_path <your_data_path> --dataset Multi-Xscience
     ```
-
+    ```
+    4.2 Extract entities and relations for Multi-Xscience using Dygie++.
+    ```
+    ```
+    4.3 Using RAKE algorithm to calculate RAKE score for each entity candidate. 
+    python script/keyphrase_extract.py
+    ```
 
 
 ## Training a new model
