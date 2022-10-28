@@ -20,23 +20,23 @@ This is the Pytorch implementation for [Multi-Document Scientific Summarization 
 
 3. Train a Dygie++ model for extracting entitie and relations from [here](https://github.com/dwadden/dygiepp).
 
-4. Dataset Preprocessing:
-
+4. Dataset Format and Dataset Preprocessing:
+    * 4.1 The format of the input files are shown in folder `example_data` , including `**.label.jsonl`, `**.ent_type_relation.jsonl`,`**.ent_promptsummary.jsonl` and `**.ent_importance_score.jsonl`.
     
     * 4.1 Create vocab
     ```
     PYTHONPATH=. python script/createVoc.py --data_path <your_data_path> --dataset Multi-Xscience
     ```
     
-    * 4.2 Extract entities and relations for Multi-Xscience using Dygie++.
+    * 5.2 Extract entities and relations for Multi-Xscience using Dygie++.
     
     
-    * 4.3 Using RAKE algorithm to calculate RAKE score for each entity candidate. 
+    * 5.3 Using RAKE algorithm to calculate RAKE score for each entity candidate. 
     ```
     python script/keyphrase_extract.py
     ```
     
-    * 4.4 Create KGText samples using the raw dataset and entities and relations.
+    * 5.4 Create KGText samples using the raw dataset and entities and relations.
     ```
     python script/add_prompt_info.py
     ```
