@@ -147,7 +147,6 @@ def get_most_important_entity_RAKE(entity_dic,contents,entity_type):
     return entity_dic
 
 def get_most_important_entity_TextrankEntity(entity_dic,entity_dic_full,entity_type):
-    ###这是我计算salient phrase的改进算法，利用textrank对实体进行排序，实体相似性由Jaccard定义，主要动机是：考虑全文中出现的所有实体，如果实体以及单词出现的频次很高，那么理应认为其为      salient entity
     path_w = r'./TextrankEntity_score2.txt'
     path_temp = r'./temp_sentence.txt'
     LANGUAGE = "english"
