@@ -14,7 +14,7 @@ This is the Pytorch implementation for [Multi-Document Scientific Summarization 
 * rake-nltk
 
 ## Usage
-1. Create folder `datasets`, `cache`, `trained_model`, `result` , `log` under the root directory.
+1. Create folder `trained_model`, `result` , `log` under the root directory.
 
 2. Download Multi-Xscience Dataset from [here](https://github.com/yaolu/Multi-XScience).
 
