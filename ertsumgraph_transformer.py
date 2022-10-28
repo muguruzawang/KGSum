@@ -116,15 +116,6 @@ class ERTSumGraph(nn.Module):
         self.vocab_size = vocab_size
         self.padding_idx = word_padding_idx
         self.device = device
-        # need to encode the following nodes:
-        # word embedding : use glove embedding
-        # sentence encoder: bilstm (word)
-        # doc encoder: bilstm (sentence)
-        # entity encoder: bilstm (word)
-        # relation embedding: initial embedding
-        # type embedding: initial embedding 
-
-        # use roberta
         
         src_embeddings = torch.nn.Embedding(self.vocab_size, self.args.emb_size, padding_idx=word_padding_idx)
         tgt_embeddings = torch.nn.Embedding(self.vocab_size, self.args.emb_size, padding_idx=word_padding_idx)
@@ -165,7 +156,6 @@ class ERTSumGraph(nn.Module):
         if checkpoint is not None:
             # checkpoint['model']
             keys = list(checkpoint['model'].keys())
-            print('keys为:'+str(keys))
             for k in keys:
                 if ('a_2' in k):
                     checkpoint['model'][k.replace('a_2', 'weight')] = checkpoint['model'][k]

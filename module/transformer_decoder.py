@@ -18,7 +18,6 @@ MAX_SIZE = 5000
 
 def get_generator(dec_hidden_size, vocab_size, emb_dim, device):
     gen_func = nn.LogSoftmax(dim=-1)
-    ### nn.Sequential内部实现了forward函数
     generator = nn.Sequential(
         nn.Linear(dec_hidden_size, emb_dim),
         nn.LeakyReLU(),
@@ -131,12 +130,8 @@ class TransformerDecoderLayer(nn.Module):
                                       mask=ent_pad_mask,
                                       layer_cache=None,
                                       type="context")
-        # FFN(c)+c作为下一层的输入
 
-        '''
-        fusion_gate = self.fusion_gate(torch.cat([word_context,graph_context], 2))
-        output = fusion_gate * word_context + (1 - fusion_gate) * graph_context
-        '''
+        
         output_fusion = self.fusion(torch.cat([word_context,graph_context], 2))
         output = output_fusion * word_context + (1 - output_fusion) * graph_context
         output = self.feed_forward(self.drop(output) + query)
@@ -237,14 +232,8 @@ class TransformerDecoder(nn.Module):
                     if state.cache is not None else None,
                     step=step)
         
-        ###这里的输出output就是第六层transformer decoder的输出g(L2)
         output = self.layer_norm(output)
 
-        # copy.shape = [4,211,3600]
-        # src_memory_bank.shape = [4,50,72,256] ??? 这个是不是得调整一下
-
-        #output.shape = [4,211,256] key.shape = [4,3600,256]  mask = [4,211,3600]
-        
         copy = self.copy_attention(query=output,
                                           key=src_memory_bank,
                                           value=src_memory_bank,
@@ -252,21 +241,10 @@ class TransformerDecoder(nn.Module):
                                           )
         copy = copy.transpose(0,1)
         
-        '''
-        copy_ent = self.copy_attention(query=output,
-                                          key=ent_memory_bank,
-                                          value=ent_memory_bank,
-                                          mask=ent_pad_mask
-                                          )
-        copy_ent = copy_ent.transpose(0,1)
-        '''
-        #copy_or_generator.shape = [211,4,1]
-        #output.shape = [4,211,256]
+        
         copy_or_generate = self.copy_or_generate(output).transpose(0,1)
-        # Process the result and update the attentions.
         outputs = output.transpose(0, 1).contiguous()
 
-        ###假如我只是copy entity word呢，结果会如何？
         return outputs, {'attn': copy, 'copy_or_generate': copy_or_generate, 'src':src_words, 'state':state}
 
     def init_decoder_state(self, src, memory_bank,
@@ -369,12 +347,7 @@ class Phase1_TransformerDecoderLayer(nn.Module):
                                       mask=ent_pad_mask,
                                       layer_cache=None,
                                       type="context")
-        # FFN(c)+c作为下一层的输入
-
-        '''
-        fusion_gate = self.fusion_gate(torch.cat([word_context,graph_context], 2))
-        output = fusion_gate * word_context + (1 - fusion_gate) * graph_context
-        '''
+        
         output_fusion = self.fusion(torch.cat([word_context,graph_context], 2))
         output = output_fusion * word_context + (1 - output_fusion) * graph_context
         output = self.feed_forward(self.drop(output) + query)
@@ -475,14 +448,8 @@ class Phase1_TransformerDecoder(nn.Module):
                     layer_cache=state.cache["layer_{}".format(i)]
                     if state.cache is not None else None,
                     step=step)
-        ###这里的输出output就是第六层transformer decoder的输出g(L2)
         output = self.layer_norm(output)
 
-        # copy.shape = [4,211,3600]
-        # src_memory_bank.shape = [4,50,72,256] ??? 这个是不是得调整一下
-
-        #output.shape = [4,211,256] key.shape = [4,3600,256]  mask = [4,211,3600]
-        
         copy = self.copy_attention(query=output,
                                           key=src_memory_bank,
                                           value=src_memory_bank,
@@ -495,7 +462,6 @@ class Phase1_TransformerDecoder(nn.Module):
         # Process the result and update the attentions.
         outputs = output.transpose(0, 1).contiguous()
 
-        ###假如我只是copy entity word呢，结果会如何？
         return outputs,  {'attn': copy, 'copy_or_generate': copy_or_generate, 'src':src_words, 'state':state}
 
     def init_decoder_state(self, src, memory_bank,
@@ -725,13 +691,8 @@ class Phase2_TransformerDecoder(nn.Module):
                     layer_cache=state.cache["layer_{}".format(i)]
                     if state.cache is not None else None,
                     step=step)
-        ###这里的输出output就是第六层transformer decoder的输出g(L2)
         output = self.layer_norm(output)
 
-        # copy.shape = [4,211,3600]
-        # src_memory_bank.shape = [4,50,72,256] ??? 这个是不是得调整一下
-
-        #output.shape = [4,211,256] key.shape = [4,3600,256]  mask = [4,211,3600]
         
         copy = self.copy_attention(query=output,
                                           key=src_memory_bank,
@@ -744,7 +705,6 @@ class Phase2_TransformerDecoder(nn.Module):
 
         outputs = output.transpose(0, 1).contiguous()
 
-        ###假如我只是copy entity word呢，结果会如何？
         return outputs,  {'attn': copy, 'copy_or_generate': copy_or_generate ,'src':src_words, 'state':state}
 
     def init_decoder_state(self, src, memory_bank,

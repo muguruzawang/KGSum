@@ -383,17 +383,6 @@ class Translator(object):
             if step < min_length1:
                     log_probs[:, self.end_token] = -1e20
 
-            '''
-            else:
-                is_type = torch.zeros(alive_seq.shape[0], device = alive_seq.device)
-                for t in self.typeid_range:
-                    is_type += torch.sum(alive_seq.eq(t),dim=1)
-
-                is_type = step -1 - is_type
-
-                lens = ~torch.gt(is_type,min_length)
-                log_probs[torch.nonzero(lens),self.end_token] = -1e20
-            '''
             log_probs[:, 0] = -1e20
             ### ngram blocking
             alive_size = alive_seq.shape[0]
@@ -424,31 +413,21 @@ class Translator(object):
             # Multiply probs by the beam probability.
             log_probs += topk_log_probs.view(-1).unsqueeze(1)
 
-            '''
-            alpha = self.global_scorer.alpha
-            length_penalty = ((5.0 + (step + 1)) / 6.0) ** alpha
-
-            # Flatten probs into a list of possibilities.
-            curr_scores = log_probs / length_penalty
-            '''
             curr_scores = log_probs
             curr_scores = curr_scores.reshape(-1, beam_size * vocab_size)
             topk_scores, topk_ids = curr_scores.topk(beam_size, dim=-1)
 
-            # Recover log probs.
-            #topk_log_probs = topk_scores * length_penalty
+            
             topk_log_probs = topk_scores
             # Resolve beam origin and true word ids.
             topk_beam_index = topk_ids.div(vocab_size)
             topk_ids = topk_ids.fmod(vocab_size)
 
-            # Map beam_index to batch_index in the flat representation.
             batch_index = (
                     topk_beam_index
                     + beam_offset[:topk_beam_index.size(0)].unsqueeze(1))
             select_indices = batch_index.view(-1).long()
-            #pdb.set_trace()
-            # Append last prediction.
+            
             alive_seq = torch.cat(
                 [alive_seq.index_select(0, select_indices),
                 topk_ids.view(-1, 1)], -1)
@@ -503,10 +482,6 @@ class Translator(object):
             # mask_hier = mask_hier.index_select(0, select_indices)
             dec_states.map_batch_fn(
                 lambda state, dim: state.index_select(dim, select_indices))
-
-
-        #return results
-
         
         phase1_digits = [results['predictions'][i][0] for i in range(batch_size)]
         phase1_digits = self.pad_sent_entity(phase1_digits, self.vocab.word2id('<PAD>'),self.vocab.word2id('<BOS>'),self.vocab.word2id('<EOS>'))
@@ -515,13 +490,9 @@ class Translator(object):
         unknown_ids = torch.zeros(phase1_digits.shape, device= phase1_digits.device, dtype=torch.long)
         phase1_digits = torch.where(phase1_digits <self.vocab.size(), phase1_digits, unknown_ids)
         
-        '''
-        phase1_digits = batch['template_target'].transpose(0,1)
-        phase1_digits = phase1_digits.unsqueeze(1).contiguous()
-        '''
+        
         phase1_feature, phase1_context, _ = self.model.encoder.sent_encoder(phase1_digits)
 
-        ####################################第二阶段解码
         dec_states_2 = self.model.phase2_decoder.init_decoder_state(src, src_features_2, with_cache=True)
 
         beam_size = self.beam_size
@@ -550,19 +521,16 @@ class Translator(object):
             dtype=torch.long,
             device=device)
         
-        ###第一步填入bos_token
         alive_seq_2 = torch.full(
             [batch_size * beam_size, 1],
             self.start_token,
             dtype=torch.long,
             device=device)
 
-        # Give full probability to the first beam on the first step.
         topk_log_probs_2 = (
             torch.tensor([0.0] + [float("-inf")] * (beam_size - 1),
                         device=device).repeat(batch_size))
 
-        # Structure that holds finished hypotheses.
         hypotheses_2 = [[] for _ in range(batch_size)]  # noqa: F812
 
         results = {}
@@ -605,17 +573,7 @@ class Translator(object):
 
             if step < min_length2:
                 log_probs[:, self.end_token] = -1e20
-            '''
-            else:
-                is_type = torch.zeros(alive_seq_2.shape[0], device = alive_seq.device)
-                for t in self.typeid_range:
-                    is_type += torch.sum(alive_seq_2.eq(t),dim=1)
-
-                is_type = step -1 - is_type
-
-                lens = ~torch.gt(is_type,min_length)
-                log_probs[torch.nonzero(lens),self.end_token] = -1e20
-            '''
+            
             log_probs[:,self.typeid_range] = -1e20
             log_probs[:, 0] = -1e20
             ### ngram blocking
