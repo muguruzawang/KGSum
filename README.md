@@ -31,7 +31,7 @@ This is the Pytorch implementation for [Multi-Document Scientific Summarization 
     python script/keyphrase_extract.py
     ```
     
-    * 5.4 Create KGText samples using `**_summary.ent_importance_score.jsonl`.
+    * 4.4 Create KGText samples using `**_summary.ent_importance_score.jsonl`.
     ```
     python script/add_prompt_info.py
     ```
