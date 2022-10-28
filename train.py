@@ -439,12 +439,6 @@ if __name__ == '__main__':
     
     test_entscore_file = os.path.join(args.cache_dir, "test.ent_importance_score.jsonl")
 
-    train_sourcetype_file = os.path.join(args.cache_dir, "train.source_word_type.jsonl")
-
-    val_sourcetype_file = os.path.join(args.cache_dir, "val.source_word_type.jsonl")
-    
-    test_sourcetype_file = os.path.join(args.cache_dir, "test.source_word_type.jsonl")
-
     '''
     val_text_file = os.path.join(args.data_dir, "train.label19.jsonl")
     val_ent_file = os.path.join(args.cache_dir, "train.ent_type_relation19.jsonl")
@@ -461,25 +455,25 @@ if __name__ == '__main__':
     args.device =  device
     
     if (args.mode == 'train'):
-        train_dataset = ExampleSet(train_text_file, train_ent_file, train_sourcetype_file, train_template_file, train_entscore_file, wordvocab, entityvocab,  rel_vocab,type_vocab, args.sent_max_len, args.doc_max_timesteps, args.device)
+        train_dataset = ExampleSet(train_text_file, train_ent_file, train_template_file, train_entscore_file, wordvocab, entityvocab,  rel_vocab,type_vocab, args.sent_max_len, args.doc_max_timesteps, args.device)
         #train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
         train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers, \
                             pin_memory = True, collate_fn=train_dataset.batch_fn)
         args.train_dataloader = train_dataloader
 
     elif (args.mode == 'validate'):
-        valid_dataset = ExampleSet(val_text_file, val_ent_file,val_sourcetype_file, val_template_file, val_entscore_file, wordvocab , entityvocab, rel_vocab,type_vocab, args.sent_max_len, args.doc_max_timesteps, args.device)
+        valid_dataset = ExampleSet(val_text_file, val_ent_file, val_template_file, val_entscore_file, wordvocab , entityvocab, rel_vocab,type_vocab, args.sent_max_len, args.doc_max_timesteps, args.device)
         valid_dataloader = torch.utils.data.DataLoader(valid_dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers, \
                             pin_memory = True, collate_fn=valid_dataset.batch_fn)
         args.valid_dataloader = valid_dataloader
 
-        test_dataset = ExampleSet(test_text_file, test_ent_file, test_sourcetype_file, test_template_file, test_entscore_file, wordvocab,entityvocab, rel_vocab,type_vocab, args.sent_max_len, args.doc_max_timesteps, args.device)
+        test_dataset = ExampleSet(test_text_file, test_ent_file, test_template_file, test_entscore_file, wordvocab,entityvocab, rel_vocab,type_vocab, args.sent_max_len, args.doc_max_timesteps, args.device)
         test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=args.valid_batch_size, shuffle=False, num_workers=args.num_workers, \
                             pin_memory = True, collate_fn=test_dataset.batch_fn)
         args.test_dataloader = test_dataloader
     
     elif (args.mode == 'test'):
-        test_dataset = ExampleSet(test_text_file, test_ent_file,test_sourcetype_file, test_template_file, test_entscore_file, wordvocab,entityvocab, rel_vocab, type_vocab,args.sent_max_len, args.doc_max_timesteps, args.device)
+        test_dataset = ExampleSet(test_text_file, test_ent_file, test_template_file, test_entscore_file, wordvocab,entityvocab, rel_vocab, type_vocab,args.sent_max_len, args.doc_max_timesteps, args.device)
         test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=args.valid_batch_size, shuffle=False, num_workers=args.num_workers, \
                             pin_memory = True, collate_fn=test_dataset.batch_fn)
         args.test_dataloader = test_dataloader

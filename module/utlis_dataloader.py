@@ -40,7 +40,6 @@ def load_to_cuda(batch,device):
              'ent_score': batch['ent_score'].to(device,non_blocking=True),\
              'template_input':batch['template_input'].to(device,non_blocking=True),\
              'template_target':batch['template_target'].to(device,non_blocking=True),\
-             'sourcetypes':batch['sourcetypes'].to(device,non_blocking=True),\
              'enttypes':batch['enttypes'].to(device,non_blocking=True),\
              'type':batch['type'].to(device,non_blocking=True)}
     batch['extra_zeros'] = batch['extra_zeros'].to(device, non_blocking=True) if batch['extra_zeros'] != None else batch['extra_zeros']
@@ -189,7 +188,7 @@ def at_least(x):
 
 class Example(object):
     def __init__(self, text, label, summary,template, entities, relations, types, \
-        clusters, sourcetype, entscore, entoracllist, sent_max_len, doc_max_len, wordvocab, entityvocab,  rel_vocab, type_vocab):
+        clusters, entscore, sent_max_len, doc_max_len, wordvocab, entityvocab,  rel_vocab, type_vocab):
         #data format is as follows:
         # text: [[],[],[]] list(list(string)) for multi-document; one per article sentence. each token is separated by a single space
         # entities: {"0":[],"1":[]...}, a dict correponding to all the sentences, one list per sentence
@@ -219,10 +218,6 @@ class Example(object):
         template_words = self.template.split() # list of strings
         template_ids = [wordvocab.word2id(w) for w in template_words] # list of word ids; OOVs are represented by the id for UNK token
 
-        self.sourcewordtypes = []
-        for key in sourcetype:
-            self.sourcewordtypes.append(sourcetype[key])
-
         self.entities = entities
         self.raw_sent_len = []
         self.raw_sent_input = []
@@ -232,17 +227,14 @@ class Example(object):
                 self.original_article_sents.extend(doc)
         self.original_abstract = "\n".join(summary)
 
-        self.sourcewordtypeslist = []
         self.enc_sent_input = []
         self.raw_sent_input = []
-        for sent, sent_type in zip(self.original_article_sents,self.sourcewordtypes):
+        for sent in self.original_article_sents:
             article_words = sent.lower().split()
             if len(article_words) > sent_max_len:
                 article_words = article_words[:sent_max_len]
-                sent_type = sent_type[:sent_max_len]
             self.raw_sent_input.append(article_words)
             self.enc_sent_input.append([wordvocab.word2id(w) for w in article_words]) # list of word ids; OOVs are represented by the id for UNK token
-            self.sourcewordtypeslist.append([wordvocab.word2id('<'+str(word[1]).lower()+'>') for word in sent_type])
             if len(self.raw_sent_input) >= self.doc_max_len:
                 break
         
@@ -362,7 +354,7 @@ class Example(object):
         return inp, target
 
 class ExampleSet(torch.utils.data.Dataset):
-    def __init__(self, text_path, ert_path,sourcetype_path, template_path, entscore_path, 
+    def __init__(self, text_path, ert_path, template_path, entscore_path, 
                     wordvocab, entityvocab, rel_vocab, type_vocab,sent_max_len, doc_max_len, device=None):
         super(ExampleSet, self).__init__()
         self.device = device
@@ -379,7 +371,6 @@ class ExampleSet(torch.utils.data.Dataset):
         self.json_text_list = readJson(text_path) ###将训练数据读出来（text: , summary: ,label:）
         self.json_ert_list = readJson(ert_path)
         self.json_template = readJson(template_path)
-        self.json_sourcetype = readJson(sourcetype_path)
         self.entscore_list = readJson(entscore_path)
         logger.info("[INFO] Finish reading %s. Total time is %f, Total size is %d", self.__class__.__name__,
                     time.time() - start, len(self.json_text_list))
@@ -394,10 +385,9 @@ class ExampleSet(torch.utils.data.Dataset):
         json_entity = self.json_ert_list[index]
         json_entscore = self.entscore_list[index]
         json_template = self.json_template[index]
-        json_sourcetype = self.json_sourcetype[index]
         #e["summary"] = e.setdefault("summary", [])
         example = Example(json_text['text'],json_text['label'], json_text['summary'],json_template['summary'], json_entity['entities'],json_entity['relations'], \
-                json_entity['types'],json_entity['clusters'], json_sourcetype, json_entscore, self.sent_max_len, \
+                json_entity['types'],json_entity['clusters'], json_entscore, self.sent_max_len, \
                 self.doc_max_len, self.wordvocab, self.entityvocab, self.rel_vocab, self.type_vocab)
         return example
     
@@ -556,14 +546,13 @@ class ExampleSet(torch.utils.data.Dataset):
                             'ent_score':[torch.FloatTensor(x) for x in ex.ent_score],'raw_temp':ex.template,\
                             'template_input':torch.LongTensor(ex.template_input),\
                             'template_target':torch.LongTensor(ex.template_target),\
-                            'sourcetypes':[torch.LongTensor(x) for x in ex.sourcewordtypeslist],
                             'enttypes':[torch.LongTensor(x) for x in ex.ent_type]}
         return _cached_tensor
 
     def batch_fn(self, samples):
         batch_ent_text, batch_rel, batch_text, batch_raw_ent_text, batch_raw_sent_input, batch_examples,batch_raw_temp, \
             batch_tgt, batch_tgt_extend,batch_raw_tgt_text, batch_graph2, batch_oovs, batch_text_extend, \
-            batch_ent_text_extend, batch_entscore,batch_template_input,batch_template_target,b_enttypes, batch_type, b_sourcetypes =  [], [], [], [], [], [], [], [], [], [], [],[],[],[],[],[],[],[],[],[]
+            batch_ent_text_extend, batch_entscore,batch_template_input,batch_template_target,b_enttypes, batch_type =  [], [], [], [], [], [], [], [], [], [], [],[],[],[],[],[],[],[],[]
         batch_graph, batch_ex = map(list, zip(*samples))
         #pdb.set_trace()
         #pdb.set_trace()
@@ -587,7 +576,6 @@ class ExampleSet(torch.utils.data.Dataset):
                 batch_template_target.append(ex_data['template_target'])
                 batch_raw_temp.append(ex_data['raw_temp'])
 
-                b_sourcetypes.append(ex_data['sourcetypes'])
                 b_enttypes.append(ex_data['enttypes'])
                 batch_type.append(ex_data['type'])
 
@@ -602,7 +590,6 @@ class ExampleSet(torch.utils.data.Dataset):
         batch_tgt_extend = pad_sent_entity(batch_tgt_extend, pad_id,bos_id,eos_id, flatten = False)
         '''
         batch_text,sent_num = pad_sent_entity(batch_text, pad_id,bos_id,eos_id, flatten = True)
-        b_sourcetypes,_ = pad_sent_entity(b_sourcetypes, pad_id,bos_id,eos_id, flatten = True)
         b_enttypes,_ = pad_sent_entity(b_enttypes, pad_id,bos_id,eos_id, flatten = True)
 
         batch_text_extend,sent_num = pad_sent_entity(batch_text_extend, pad_id,bos_id,eos_id, flatten = True)
@@ -641,7 +628,7 @@ class ExampleSet(torch.utils.data.Dataset):
              'graph': batch_graph, 'raw_ent_text': batch_raw_ent_text, 'raw_sent_input': batch_raw_sent_input, 'ent_num':ent_num, \
             'examples':batch_examples, 'tgt': batch_tgt, 'sent_num':sent_num, 'edges':batch_edges, 'raw_tgt_text': batch_raw_tgt_text, \
             'article_oovs':batch_oovs, 'tgt_extend': batch_tgt_extend, 'ent_text_extend':batch_ent_text_extend,'ent_score':batch_entscore,\
-            'template_input':batch_template_input,'template_target':batch_template_target,'sourcetypes':b_sourcetypes,\
+            'template_input':batch_template_input,'template_target':batch_template_target,\
             'enttypes':b_enttypes, 'type': batch_type, 'raw_temp':batch_raw_temp}
         
 if __name__ == '__main__' :
