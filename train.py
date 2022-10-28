@@ -388,12 +388,12 @@ if __name__ == '__main__':
 
     logger.info("Pytorch %s", torch.__version__)
 
-    VOCAL_FILE = os.path.join(args.cache_dir, "vocab_prompt2")
+    VOCAL_FILE = r"./dataset/vocab_prompt"
     logger.info("[INFO] Create Context Vocab, vocab path is %s", VOCAL_FILE)
     wordvocab = WordVocab(VOCAL_FILE, args.vocab_size)
-    filter_word_path = os.path.join(args.cache_dir, "filter_word.txt")
+    filter_word_path = r"./dataset/filter_word.txt"
 
-    ENTVOCAL_FILE = os.path.join(args.cache_dir, "entityVocab2")
+    ENTVOCAL_FILE = r"./dataset/entityVocab"
     logger.info("[INFO] Create Entity Vocab, vocab path is %s", ENTVOCAL_FILE)
     entityvocab = WordVocab(ENTVOCAL_FILE, args.vocab_size)
 
@@ -414,18 +414,14 @@ if __name__ == '__main__':
     type_vocab.build()
     
     train_text_file = os.path.join(args.data_dir, "train.label.jsonl")
-    train_ent_file = os.path.join(args.cache_dir, "train.ent_type_relation.jsonl")
+    train_ent_file = os.path.join(args.data_dir, "train.ent_type_relation.jsonl")
     
     val_text_file = os.path.join(args.data_dir, "val.label.jsonl")
-    val_ent_file = os.path.join(args.cache_dir, "val.ent_type_relation.jsonl")
+    val_ent_file = os.path.join(args.data_dir, "val.ent_type_relation.jsonl")
 
-    '''
-    test_text_file = os.path.join(args.data_dir, "val.label.jsonl")
-    test_ent_file = os.path.join(args.cache_dir, "val.ent_type_relation.jsonl")
     
-    '''
     test_text_file = os.path.join(args.data_dir, "test.label.jsonl")
-    test_ent_file = os.path.join(args.cache_dir, "test.ent_type_relation.jsonl")
+    test_ent_file = os.path.join(args.data_dir, "test.ent_type_relation.jsonl")
     
     train_template_file = os.path.join(args.data_dir, "train.ent_promptsummary.jsonl")
     
@@ -433,18 +429,18 @@ if __name__ == '__main__':
 
     test_template_file = os.path.join(args.data_dir, "test.ent_promptsummary.jsonl")
     
-    train_entscore_file = os.path.join(args.cache_dir, "train.ent_importance_score.jsonl")
+    train_entscore_file = os.path.join(args.data_dir, "train.ent_importance_score.jsonl")
     
-    val_entscore_file = os.path.join(args.cache_dir, "val.ent_importance_score.jsonl")
+    val_entscore_file = os.path.join(args.data_dir, "val.ent_importance_score.jsonl")
     
-    test_entscore_file = os.path.join(args.cache_dir, "test.ent_importance_score.jsonl")
+    test_entscore_file = os.path.join(args.data_dir, "test.ent_importance_score.jsonl")
 
     '''
     val_text_file = os.path.join(args.data_dir, "train.label19.jsonl")
-    val_ent_file = os.path.join(args.cache_dir, "train.ent_type_relation19.jsonl")
+    val_ent_file = os.path.join(args.data_dir, "train.ent_type_relation19.jsonl")
     
     test_text_file = os.path.join(args.data_dir, "train.label19.jsonl")
-    test_ent_file = os.path.join(args.cache_dir, "train.ent_type_relation19.jsonl")
+    test_ent_file = os.path.join(args.data_dir, "train.ent_type_relation19.jsonl")
     '''
     args.fnames = [train_text_file, val_text_file, test_text_file, train_ent_file, val_ent_file, test_ent_file]
     

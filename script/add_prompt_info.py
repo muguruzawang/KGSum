@@ -4,11 +4,10 @@ import os
 import json
 
 path= r'/data/run01/scv0028/wpc/survey_generation/HeterEnReTSumGraph_ABS/datasets/multi_xscience'
-path2 = r'/data/run01/scv0028/wpc/survey_generation/HeterEnReTSumGraph_ABS/cache/multi_xscience'
 
 Types = ['train','val','test']
 for t in Types:
-    path_type_json = os.path.join(path2,t+'_summary.ent_type_relation.jsonl')
+    path_type_json = os.path.join(path,t+'_summary.ent_type_relation.jsonl')
     path_summary = os.path.join(path,t+'.label.jsonl')
     path_w = os.path.join(path,t+'.ent_promptsummary.jsonl')
     with  open(path_type_json,'r',encoding='utf-8') as f2, open(path_w,'w',encoding='utf-8') as f3 ,\
