@@ -21,10 +21,10 @@ This is the Pytorch implementation for [Multi-Document Scientific Summarization 
 3. Train a Dygie++ model for extracting entitie and relations from [here](https://github.com/dwadden/dygiepp).
 
 4. Dataset Format and Dataset Preprocessing:
-    * 4.1 The format of the input files are shown in folder `example_data` , including `**.label.jsonl`, `**.ent_type_relation.jsonl`,`**.ent_promptsummary.jsonl`, `**.ent_importance_score.jsonl` and `**_summary.ent_importance_score.jsonl`.
+    * 4.1 The format of the input files are shown in folder `example_data` , including `**.label.jsonl`, `**.ent_type_relation.jsonl`,`**.ent_promptsummary.jsonl`, `**.ent_importance_score.jsonl`, `**_summary.ent_importance_score.jsonl` and `output_**_processed_coref.json`.
     
-    * 4.2 Extract entities and relations for Multi-Xscience using Dygie++. Get the output file `output_**_processed_coref.json`
-    Postprocess the extracted files to the format of `**.ent_type_relation.jsonl`
+    * 4.2 Extract entities and relations for Multi-Xscience using Dygie++. The output file is `output_**_processed_coref.json`.
+    Postprocess the output file `output_**_processed_coref.json` to the format of `**.ent_type_relation.jsonl`
     
     * 4.3 Using RAKE algorithm on `output_**_processed_coref.json` to calculate RAKE score for each entity candidate. 
     ```
