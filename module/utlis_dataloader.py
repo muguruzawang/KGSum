@@ -40,11 +40,6 @@ def load_to_cuda(batch,device):
              'ent_score': batch['ent_score'].to(device,non_blocking=True),\
              'template_input':batch['template_input'].to(device,non_blocking=True),\
              'template_target':batch['template_target'].to(device,non_blocking=True),\
-             'entoracle':batch['entoracle'].to(device,non_blocking=True),\
-             'entoracle_extend':batch['entoracle_extend'].to(device,non_blocking=True),\
-             'entoracle_type':batch['entoracle_type'].to(device,non_blocking=True),\
-             'entoracle_type_input':batch['entoracle_type_input'].to(device,non_blocking=True),\
-             'entoracle_index':batch['entoracle_index'].to(device,non_blocking=True),\
              'sourcetypes':batch['sourcetypes'].to(device,non_blocking=True),\
              'enttypes':batch['enttypes'].to(device,non_blocking=True),\
              'type':batch['type'].to(device,non_blocking=True)}
@@ -208,7 +203,6 @@ class Example(object):
         self.wordvocab = wordvocab
         self.entityvocab = entityvocab
         self.type_vocab = type_vocab
-        self.entoracle_paddingid = -1
         start_decoding = wordvocab.word2id(vocabulary.START_DECODING)
         stop_decoding = wordvocab.word2id(vocabulary.STOP_DECODING)
 
@@ -228,19 +222,6 @@ class Example(object):
         self.sourcewordtypes = []
         for key in sourcetype:
             self.sourcewordtypes.append(sourcetype[key])
-
-        entoracle_words = [vocabulary.PAD_TOKEN for i in range(len(abs_ids)+1)]
-        self.entoracle_wordsid = [wordvocab.word2id(vocabulary.PAD_TOKEN) for i in range(len(abs_ids)+1)]
-        self.entoracle_typesid = [wordvocab.word2id(vocabulary.PAD_TOKEN) for i in range(len(abs_ids)+1)]
-        self.entoracle_typesid_input = [wordvocab.word2id(vocabulary.PAD_TOKEN) for i in range(len(abs_ids)+1)]
-        self.entoracle_index = [self.entoracle_paddingid for i in range(len(abs_ids)+1)]
-
-        for word in entoracllist:
-            entoracle_words[int(word[2])] = word[0]
-            self.entoracle_wordsid[int(word[2])] = wordvocab.word2id(word[0])
-            self.entoracle_typesid[int(word[2])] = wordvocab.word2id('<'+word[1]+'>')
-            self.entoracle_typesid_input[int(word[2])+1] = wordvocab.word2id('<'+word[1]+'>')
-            self.entoracle_index[int(word[2])] = int(word[2])
 
         self.entities = entities
         self.raw_sent_len = []
@@ -281,7 +262,6 @@ class Example(object):
         # Get a verison of the reference summary where in-article OOVs are represented by their temporary article OOV id
         abs_ids_extend_vocab = data.abstract2ids(abstract_words, wordvocab, self.article_oovs)
         template_extend_vocab = data.abstract2ids(template_words, wordvocab, self.article_oovs)
-        self.entoracle_extend = data.abstract2ids(entoracle_words, wordvocab, self.article_oovs)
 
         # Overwrite decoder target sequence so it uses the temp article OOV ids
         _, self.target = self.get_dec_inp_targ_seqs(abs_ids_extend_vocab, 500, start_decoding, stop_decoding)
@@ -382,7 +362,7 @@ class Example(object):
         return inp, target
 
 class ExampleSet(torch.utils.data.Dataset):
-    def __init__(self, text_path, ert_path,sourcetype_path, template_path, entscore_path, entoracle_path, 
+    def __init__(self, text_path, ert_path,sourcetype_path, template_path, entscore_path, 
                     wordvocab, entityvocab, rel_vocab, type_vocab,sent_max_len, doc_max_len, device=None):
         super(ExampleSet, self).__init__()
         self.device = device
@@ -401,7 +381,6 @@ class ExampleSet(torch.utils.data.Dataset):
         self.json_template = readJson(template_path)
         self.json_sourcetype = readJson(sourcetype_path)
         self.entscore_list = readJson(entscore_path)
-        self.entoracle_list = readJson(entoracle_path)
         logger.info("[INFO] Finish reading %s. Total time is %f, Total size is %d", self.__class__.__name__,
                     time.time() - start, len(self.json_text_list))
         self.size = len(self.json_text_list) ###训练集的大小
@@ -414,12 +393,11 @@ class ExampleSet(torch.utils.data.Dataset):
         json_text = self.json_text_list[index]
         json_entity = self.json_ert_list[index]
         json_entscore = self.entscore_list[index]
-        json_entoracle = self.entoracle_list[index]
         json_template = self.json_template[index]
         json_sourcetype = self.json_sourcetype[index]
         #e["summary"] = e.setdefault("summary", [])
         example = Example(json_text['text'],json_text['label'], json_text['summary'],json_template['summary'], json_entity['entities'],json_entity['relations'], \
-                json_entity['types'],json_entity['clusters'], json_sourcetype, json_entscore, json_entoracle['entities'], self.sent_max_len, \
+                json_entity['types'],json_entity['clusters'], json_sourcetype, json_entscore, self.sent_max_len, \
                 self.doc_max_len, self.wordvocab, self.entityvocab, self.rel_vocab, self.type_vocab)
         return example
     
@@ -578,11 +556,6 @@ class ExampleSet(torch.utils.data.Dataset):
                             'ent_score':[torch.FloatTensor(x) for x in ex.ent_score],'raw_temp':ex.template,\
                             'template_input':torch.LongTensor(ex.template_input),\
                             'template_target':torch.LongTensor(ex.template_target),\
-                            'entoracle':torch.LongTensor(ex.entoracle_wordsid),\
-                            'entoracle_extend':torch.LongTensor(ex.entoracle_extend),\
-                            'entoracle_type':torch.LongTensor(ex.entoracle_typesid),\
-                            'entoracle_type_input':torch.LongTensor(ex.entoracle_typesid_input),\
-                            'entoracle_index':torch.LongTensor(ex.entoracle_index),\
                             'sourcetypes':[torch.LongTensor(x) for x in ex.sourcewordtypeslist],
                             'enttypes':[torch.LongTensor(x) for x in ex.ent_type]}
         return _cached_tensor
@@ -590,9 +563,7 @@ class ExampleSet(torch.utils.data.Dataset):
     def batch_fn(self, samples):
         batch_ent_text, batch_rel, batch_text, batch_raw_ent_text, batch_raw_sent_input, batch_examples,batch_raw_temp, \
             batch_tgt, batch_tgt_extend,batch_raw_tgt_text, batch_graph2, batch_oovs, batch_text_extend, \
-            batch_ent_text_extend, batch_entscore,batch_template_input,batch_template_target,b_enttypes, batch_type,\
-            b_entoracle, b_entoracle_extend, b_entoracle_type, b_entoracle_type_input, b_entoracle_index, b_sourcetypes =  [], [], [], [], [], [], [], [], \
-                                                          [], [], [],[],[],[],[],[],[],[],[],[],[],[],[],[],[]
+            batch_ent_text_extend, batch_entscore,batch_template_input,batch_template_target,b_enttypes, batch_type, b_sourcetypes =  [], [], [], [], [], [], [], [], [], [], [],[],[],[],[],[],[],[],[],[]
         batch_graph, batch_ex = map(list, zip(*samples))
         #pdb.set_trace()
         #pdb.set_trace()
@@ -616,11 +587,6 @@ class ExampleSet(torch.utils.data.Dataset):
                 batch_template_target.append(ex_data['template_target'])
                 batch_raw_temp.append(ex_data['raw_temp'])
 
-                b_entoracle.append(ex_data['entoracle'])
-                b_entoracle_extend.append(ex_data['entoracle_extend'])
-                b_entoracle_type.append(ex_data['entoracle_type'])
-                b_entoracle_type_input.append(ex_data['entoracle_type_input'])
-                b_entoracle_index.append(ex_data['entoracle_index'])
                 b_sourcetypes.append(ex_data['sourcetypes'])
                 b_enttypes.append(ex_data['enttypes'])
                 batch_type.append(ex_data['type'])
@@ -660,12 +626,6 @@ class ExampleSet(torch.utils.data.Dataset):
         batch_template_input = batch_tgt_all.transpose(0,1)[batch_size*2:batch_size*3].transpose(0,1)
         batch_template_target = batch_tgt_all.transpose(0,1)[batch_size*3:].transpose(0,1)
         
-        b_entoracle = pad_sent_entity(b_entoracle, pad_id,bos_id,eos_id, flatten = False)
-        b_entoracle_extend = pad_sent_entity(b_entoracle_extend, pad_id,bos_id,eos_id, flatten = False)
-        b_entoracle_type = pad_sent_entity(b_entoracle_type, pad_id,bos_id,eos_id, flatten = False)
-        b_entoracle_type_input = pad_sent_entity(b_entoracle_type_input, pad_id,bos_id,eos_id, flatten = False)
-
-        b_entoracle_index = pad_sent_entity(b_entoracle_index, pad_id,bos_id,eos_id, flatten = False)
         batch_type = pad(batch_type, out_type='tensor')
         
         max_art_oovs = max([len(oovs) for oovs in batch_oovs])
@@ -681,9 +641,8 @@ class ExampleSet(torch.utils.data.Dataset):
              'graph': batch_graph, 'raw_ent_text': batch_raw_ent_text, 'raw_sent_input': batch_raw_sent_input, 'ent_num':ent_num, \
             'examples':batch_examples, 'tgt': batch_tgt, 'sent_num':sent_num, 'edges':batch_edges, 'raw_tgt_text': batch_raw_tgt_text, \
             'article_oovs':batch_oovs, 'tgt_extend': batch_tgt_extend, 'ent_text_extend':batch_ent_text_extend,'ent_score':batch_entscore,\
-            'template_input':batch_template_input,'template_target':batch_template_target,'entoracle':b_entoracle,'sourcetypes':b_sourcetypes,\
-            'entoracle_extend':b_entoracle_extend, 'entoracle_type':b_entoracle_type, 'entoracle_index':b_entoracle_index,\
-            'entoracle_type_input':b_entoracle_type_input,'enttypes':b_enttypes, 'type': batch_type, 'raw_temp':batch_raw_temp}
+            'template_input':batch_template_input,'template_target':batch_template_target,'sourcetypes':b_sourcetypes,\
+            'enttypes':b_enttypes, 'type': batch_type, 'raw_temp':batch_raw_temp}
         
 if __name__ == '__main__' :
     pass
