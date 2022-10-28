@@ -16,7 +16,7 @@ This is the Pytorch implementation for [Multi-Document Scientific Summarization 
 ## Usage
 1. Create folder `datasets`, `cache`, `trained_model`, `result` , `log` under the root directory.
 
-2. Download Multi-Xscience Dataset from [here](https://github.com/yaolu/Multi-XScience). Put Multi-Xscience under `datasets`.
+2. Download Multi-Xscience Dataset from [here](https://github.com/yaolu/Multi-XScience).
 
 3. Train a Dygie++ model for extracting entitie and relations from [here](https://github.com/dwadden/dygiepp).
 
