@@ -188,7 +188,7 @@ def at_least(x):
 
 class Example(object):
     def __init__(self, text, label, summary,template, entities, relations, types, \
-        clusters, entscore, sent_max_len, doc_max_len, wordvocab, entityvocab,  rel_vocab, type_vocab):
+        clusters, entscore, sent_max_len, doc_max_len, wordvocab,  rel_vocab, type_vocab):
         #data format is as follows:
         # text: [[],[],[]] list(list(string)) for multi-document; one per article sentence. each token is separated by a single space
         # entities: {"0":[],"1":[]...}, a dict correponding to all the sentences, one list per sentence
@@ -200,7 +200,6 @@ class Example(object):
         # all the text words should be in the range of word_vocab, or it will be [UNK]
 
         self.wordvocab = wordvocab
-        self.entityvocab = entityvocab
         self.type_vocab = type_vocab
         start_decoding = wordvocab.word2id(vocabulary.START_DECODING)
         stop_decoding = wordvocab.word2id(vocabulary.STOP_DECODING)
@@ -355,13 +354,12 @@ class Example(object):
 
 class ExampleSet(torch.utils.data.Dataset):
     def __init__(self, text_path, ert_path, template_path, entscore_path, 
-                    wordvocab, entityvocab, rel_vocab, type_vocab,sent_max_len, doc_max_len, device=None):
+                    wordvocab, rel_vocab, type_vocab,sent_max_len, doc_max_len, device=None):
         super(ExampleSet, self).__init__()
         self.device = device
         self.rel_vocab = rel_vocab
         self.wordvocab = wordvocab
         self.type_vocab = type_vocab
-        self.entityvocab = entityvocab
 
         self.sent_max_len = sent_max_len
         self.doc_max_len = doc_max_len
@@ -388,7 +386,7 @@ class ExampleSet(torch.utils.data.Dataset):
         #e["summary"] = e.setdefault("summary", [])
         example = Example(json_text['text'],json_text['label'], json_text['summary'],json_template['summary'], json_entity['entities'],json_entity['relations'], \
                 json_entity['types'],json_entity['clusters'], json_entscore, self.sent_max_len, \
-                self.doc_max_len, self.wordvocab, self.entityvocab, self.rel_vocab, self.type_vocab)
+                self.doc_max_len, self.wordvocab, self.rel_vocab, self.type_vocab)
         return example
     
     def pad_label_m(self, label_matrix):

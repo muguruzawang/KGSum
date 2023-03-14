@@ -17,12 +17,11 @@ def fill_config(args):
     return args
 
 
-def vocab_config(args, rel_vocab, type_vocab, wordvocab, entityvocab):
+def vocab_config(args, rel_vocab, type_vocab, wordvocab):
     # dirty work
     args.rel_vocab = rel_vocab
     args.type_vocab = type_vocab
     args.wordvocab = wordvocab
-    args.entityvocab = entityvocab
 
     return args
 
